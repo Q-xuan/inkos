@@ -880,11 +880,11 @@ export function ChatPage({ activeBookId, activeWorkId, workProfileId, mode = act
             <p className="text-sm text-muted-foreground/70 max-w-md leading-7">
               {isZh ? "选个玩法，进去再聊你想玩的世界。" : "Pick a playstyle, then describe the world you want in chat."}
             </p>
-            <div className="flex gap-3">
+            <div className="flex w-full max-w-sm flex-col gap-3 sm:flex-row sm:justify-center">
               <button
                 type="button"
                 onClick={() => { if (activeSessionId) setSessionPlayMode(activeSessionId, "guided"); }}
-                className="w-40 rounded-xl border border-border/50 bg-secondary/30 px-4 py-3 text-left transition-all hover:border-primary/40 hover:bg-primary/5"
+                className="w-full rounded-xl border border-border/50 bg-secondary/30 px-4 py-3 text-left transition-all hover:border-primary/40 hover:bg-primary/5 sm:w-40"
               >
                 <div className="text-sm font-medium text-foreground">{isZh ? "点着玩" : "Choices"}</div>
                 <div className="mt-1 text-xs leading-5 text-muted-foreground">{isZh ? "GM 给选项，点着推进" : "Pick from offered actions"}</div>
@@ -892,7 +892,7 @@ export function ChatPage({ activeBookId, activeWorkId, workProfileId, mode = act
               <button
                 type="button"
                 onClick={() => { if (activeSessionId) setSessionPlayMode(activeSessionId, "open"); }}
-                className="w-40 rounded-xl border border-border/50 bg-secondary/30 px-4 py-3 text-left transition-all hover:border-primary/40 hover:bg-primary/5"
+                className="w-full rounded-xl border border-border/50 bg-secondary/30 px-4 py-3 text-left transition-all hover:border-primary/40 hover:bg-primary/5 sm:w-40"
               >
                 <div className="text-sm font-medium text-foreground">{isZh ? "自由玩" : "Free"}</div>
                 <div className="mt-1 text-xs leading-5 text-muted-foreground">{isZh ? "自己打字，想干嘛干嘛" : "Type anything you want"}</div>
@@ -1149,7 +1149,7 @@ export function ChatPage({ activeBookId, activeWorkId, workProfileId, mode = act
                   type="button"
                   onClick={() => setSkillPanelOpen((value) => !value)}
                   disabled={loading || !activeSessionId}
-                  className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-border/50 transition-colors disabled:opacity-30 ${skillPanelOpen || selectedSkillIds.length > 0 ? "bg-primary/10 text-primary" : "text-muted-foreground hover:border-primary/40 hover:text-primary"}`}
+                  className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-border/50 transition-colors disabled:opacity-30 lg:h-8 lg:w-8 ${skillPanelOpen || selectedSkillIds.length > 0 ? "bg-primary/10 text-primary" : "text-muted-foreground hover:border-primary/40 hover:text-primary"}`}
                   title={isZh ? "添加 Skill" : "Add skill"}
                   aria-label={isZh ? "添加 Skill" : "Add skill"}
                 >
@@ -1159,7 +1159,7 @@ export function ChatPage({ activeBookId, activeWorkId, workProfileId, mode = act
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
                   disabled={!activeSessionId}
-                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-border/50 text-muted-foreground transition-colors hover:border-primary/40 hover:text-primary disabled:opacity-30"
+                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-border/50 text-muted-foreground transition-colors hover:border-primary/40 hover:text-primary disabled:opacity-30 lg:h-8 lg:w-8"
                   title={isZh ? "上传图片或资料" : "Attach files"}
                   aria-label={isZh ? "上传图片或资料" : "Attach files"}
                 >
@@ -1173,13 +1173,13 @@ export function ChatPage({ activeBookId, activeWorkId, workProfileId, mode = act
                   placeholder={isZh ? "输入指令..." : "Enter command..."}
                   disabled={!activeSessionId || !sessionMatchesRoute || creatingWorkSession}
                   rows={1}
-                  className="flex-1 bg-transparent text-base leading-7 placeholder:text-muted-foreground/50 outline-none! border-none! ring-0! shadow-none focus:outline-none! focus:ring-0! focus:border-none! resize-none disabled:opacity-50 max-h-[200px] overflow-y-auto"
+                  className="min-w-0 flex-1 bg-transparent text-base leading-7 placeholder:text-muted-foreground/50 outline-none! border-none! ring-0! shadow-none focus:outline-none! focus:ring-0! focus:border-none! resize-none disabled:opacity-50 max-h-[200px] overflow-y-auto"
                 />
                 <button
                   type="button"
                   onClick={() => void onSend(input)}
                   disabled={(!input.trim() && attachedFiles.length === 0 && !loading) || !activeSessionId || !sessionMatchesRoute || creatingWorkSession}
-                  className="w-8 h-8 rounded-lg bg-primary text-primary-foreground flex items-center justify-center shrink-0 hover:scale-105 active:scale-95 transition-all disabled:opacity-20 disabled:scale-100 shadow-sm shadow-primary/20"
+                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground hover:scale-105 active:scale-95 transition-all disabled:opacity-20 disabled:scale-100 shadow-sm shadow-primary/20 lg:h-8 lg:w-8"
                   title={loading && !input.trim() && attachedFiles.length === 0 ? (isZh ? "停止当前回复" : "Stop") : undefined}
                 >
                   {loading && !input.trim() && attachedFiles.length === 0
@@ -1187,13 +1187,13 @@ export function ChatPage({ activeBookId, activeWorkId, workProfileId, mode = act
                     : <ArrowUp size={14} strokeWidth={2.5} />}
                 </button>
               </div>
-              <div className="flex items-center gap-2 px-3 pb-2 border-t border-border/20 pt-1.5">
+              <div className="flex min-w-0 flex-wrap items-center gap-2 border-t border-border/20 px-3 pb-2 pt-1.5">
                 {modelPickerStatus === "loading" ? (
                   <span className="text-[15px] text-muted-foreground/40 animate-pulse">{isZh ? "加载模型..." : "Loading models..."}</span>
                 ) : modelPickerStatus === "ready" ? (
                   <DropdownMenu>
-                    <DropdownMenuTrigger className="flex items-center gap-1.5 px-2 py-1.5 rounded-md hover:bg-muted text-[16px] transition-colors cursor-pointer">
-                      <span className="font-medium truncate max-w-[260px]">
+                    <DropdownMenuTrigger className="flex min-h-10 min-w-0 max-w-full items-center gap-1.5 rounded-md px-2 py-1.5 text-[16px] transition-colors cursor-pointer hover:bg-muted lg:min-h-0">
+                      <span className="max-w-[min(260px,46vw)] truncate font-medium">
                         {selectedModelLabel}
                       </span>
                       <ChevronDown size={17} className="text-muted-foreground" />

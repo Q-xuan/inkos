@@ -18,6 +18,7 @@ import {
   presentCurrentState,
   roleFromPath,
 } from "../../lib/truth-display";
+import { bookPanelBounds } from "../../lib/shell-layout";
 
 export interface BookSidebarProps {
   readonly bookId: string;
@@ -228,12 +229,8 @@ function PanelView({ bookId, theme: _theme, t, sse }: BookSidebarProps) {
   );
 }
 
-const SIDEBAR_RATIO = 0.4;
-const SIDEBAR_MIN = 280;
-const SIDEBAR_MAX = 700;
-
 function defaultSidebarWidth(): number {
-  return Math.min(SIDEBAR_MAX, Math.max(SIDEBAR_MIN, Math.round(window.innerWidth * SIDEBAR_RATIO)));
+  return bookPanelBounds(window.innerWidth).initial;
 }
 
 export function BookSidebar({ bookId, theme, t, sse }: BookSidebarProps) {
@@ -241,15 +238,25 @@ export function BookSidebar({ bookId, theme, t, sse }: BookSidebarProps) {
   const [width, setWidth] = useState(defaultSidebarWidth);
   const dragging = useRef(false);
 
+  useEffect(() => {
+    const clamp = () => {
+      const bounds = bookPanelBounds(window.innerWidth);
+      setWidth((current) => Math.min(bounds.max, Math.max(bounds.min, current)));
+    };
+    window.addEventListener("resize", clamp);
+    return () => window.removeEventListener("resize", clamp);
+  }, []);
+
   const onMouseDown = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     dragging.current = true;
     const startX = e.clientX;
     const startW = width;
+    const bounds = bookPanelBounds(window.innerWidth);
     const onMove = (ev: MouseEvent) => {
       if (!dragging.current) return;
       const delta = startX - ev.clientX;
-      setWidth(Math.min(SIDEBAR_MAX, Math.max(SIDEBAR_MIN, startW + delta)));
+      setWidth(Math.min(bounds.max, Math.max(bounds.min, startW + delta)));
     };
     const onUp = () => {
       dragging.current = false;
@@ -286,10 +293,13 @@ export function BookSidebarToggle({ bookId, theme, t, sse }: BookSidebarProps) {
   return (
     <>
       <button
+        type="button"
         onClick={() => setOpen(true)}
-        className="fixed right-3 top-[72px] z-20 lg:hidden w-8 h-8 rounded-lg bg-card border border-border/40 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+        aria-label={t("shell.bookPanel")}
+        className="fixed right-3 top-16 z-20 inline-flex h-10 items-center gap-1.5 rounded-lg border border-border/40 bg-card px-3 text-sm text-muted-foreground shadow-sm hover:text-foreground transition-colors lg:hidden"
       >
-        <PanelRightOpen size={14} />
+        <PanelRightOpen size={16} />
+        <span>{t("shell.bookPanel")}</span>
       </button>
 
       {open && (
@@ -301,8 +311,13 @@ export function BookSidebarToggle({ bookId, theme, t, sse }: BookSidebarProps) {
           >
             <div className="flex items-center justify-between px-3 py-2 border-b border-border/20">
               <span className="text-[15px] leading-6 font-medium text-muted-foreground">书籍信息</span>
-              <button onClick={() => setOpen(false)} className="text-muted-foreground hover:text-foreground">
-                <PanelRightClose size={14} />
+              <button
+                type="button"
+                onClick={() => setOpen(false)}
+                aria-label={t("shell.closeNav")}
+                className="inline-flex h-10 w-10 items-center justify-center rounded-lg text-muted-foreground hover:bg-secondary/60 hover:text-foreground"
+              >
+                <PanelRightClose size={16} />
               </button>
             </div>
             {sidebarView === "artifact" ? (

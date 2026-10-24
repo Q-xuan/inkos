@@ -27,7 +27,7 @@ export const ChatMessage = memo(function ChatMessage({
     <Message from={role}>
       <MessageContent>
         {isUser ? (
-          <div className="text-[17px] leading-[1.72]">{content}</div>
+          <div className="break-words text-[17px] leading-[1.72] [overflow-wrap:anywhere]">{content}</div>
         ) : isError ? (
           <div className="flex items-center gap-2 text-[17px] leading-[1.72] text-destructive">
             <XCircle size={14} className="shrink-0" />

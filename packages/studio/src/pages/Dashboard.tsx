@@ -193,7 +193,7 @@ export function Dashboard({ nav, sse, theme, t }: { nav: Nav; sse: { messages: R
   return (
     <div className="space-y-12">
       {!hasServices && (
-        <div className="rounded-lg border border-border/60 bg-card px-5 py-4 mb-8 flex items-center justify-between gap-4">
+        <div className="rounded-lg border border-border/60 bg-card px-5 py-4 mb-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <div className="text-sm font-medium">还没有配置 AI 模型</div>
             <div className="text-xs text-muted-foreground mt-0.5">配好一个服务商才能开始创作</div>
@@ -206,9 +206,9 @@ export function Dashboard({ nav, sse, theme, t }: { nav: Nav; sse: { messages: R
           </button>
         </div>
       )}
-      <div className="flex items-end justify-between border-b border-border/40 pb-8">
-        <div>
-          <h1 className="font-serif text-4xl mb-2">{t("dash.title")}</h1>
+      <div className="flex flex-col items-start gap-4 border-b border-border/40 pb-8 sm:flex-row sm:items-end sm:justify-between">
+        <div className="min-w-0">
+          <h1 className="font-serif text-3xl mb-2 sm:text-4xl">{t("dash.title")}</h1>
           <p className="text-sm text-muted-foreground">{t("dash.subtitle")}</p>
         </div>
         <button
@@ -229,15 +229,15 @@ export function Dashboard({ nav, sse, theme, t }: { nav: Nav; sse: { messages: R
               key={book.id}
               className={`paper-sheet group relative rounded-2xl fade-in ${staggerClass} ${menuOpenBookId === book.id ? "z-50" : ""}`}
             >
-              <div className="p-8 flex items-start justify-between">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-3 mb-3">
+              <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-start sm:justify-between sm:p-8">
+                <div className="min-w-0 flex-1">
+                  <div className="mb-3 flex min-w-0 items-center gap-3">
                     <div className="p-2 rounded-lg bg-primary/5 text-primary">
                       <BookOpen size={20} />
                     </div>
                     <button
                       onClick={() => nav.toBook(book.id)}
-                      className="font-serif text-2xl hover:text-primary transition-all text-left truncate block font-medium hover:underline underline-offset-4 decoration-primary/30"
+                      className="min-w-0 font-serif text-2xl hover:text-primary transition-all text-left truncate block font-medium hover:underline underline-offset-4 decoration-primary/30"
                     >
                       {book.title}
                     </button>
@@ -278,7 +278,7 @@ export function Dashboard({ nav, sse, theme, t }: { nav: Nav; sse: { messages: R
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3 shrink-0 ml-6">
+                <div className="flex flex-wrap items-center gap-2 shrink-0 sm:ml-6 sm:gap-3">
                   <button
                     onClick={async () => {
                       try { await postApi(`/books/${book.id}/write-next`); }

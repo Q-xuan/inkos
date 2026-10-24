@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { useApi } from "../hooks/use-api";
 import { useNewSSEMessages, type SSEMessage } from "../hooks/use-sse";
 import { applyBookCollectionEvent, shouldRefetchBookCollections, shouldRefetchDaemonStatus } from "../hooks/use-book-activity";
@@ -48,8 +48,12 @@ import {
   Rows3,
   Film,
   Languages,
+  X,
 } from "lucide-react";
 import { InkosLogo } from "./InkosLogo";
+import type { ShellMode } from "../lib/shell-layout";
+
+const SidebarRoomy = createContext(false);
 
 // 历史记录里的会话混装多种类型（chat / short / play / book-create），用图标区分。
 function SessionKindIcon({ kind, className }: { readonly kind?: string; readonly className?: string }) {
@@ -89,11 +93,14 @@ interface Nav {
   toFilmStudio: (id: string) => void;
 }
 
-export function Sidebar({ nav, activePage, sse, t }: {
+export function Sidebar({ nav, activePage, sse, t, mode, open, onClose }: {
   nav: Nav;
   activePage: string;
   sse: { messages: ReadonlyArray<SSEMessage> };
   t: TFunction;
+  mode: ShellMode;
+  open: boolean;
+  onClose: () => void;
 }) {
   const { data, refetch: refetchBooks, mutate: mutateBooks } = useApi<{ books: ReadonlyArray<BookSummary> }>("/books");
   const { data: filmsData, refetch: refetchFilms } = useApi<{ films: ReadonlyArray<{ projectId: string; title: string }> }>("/interactive-films");
@@ -285,13 +292,29 @@ export function Sidebar({ nav, activePage, sse, t }: {
     setDeleteTarget(null);
   };
 
+  const roomy = mode === "drawer";
+  const hit = roomy ? "min-h-10 py-2" : "py-1.5";
+
   return (
-    <aside className="w-[260px] shrink-0 border-r border-border bg-background/80 backdrop-blur-md flex flex-col h-full overflow-hidden select-none">
+    <SidebarRoomy.Provider value={roomy}>
+    <aside
+      id="studio-nav"
+      aria-label="InkOS Studio"
+      aria-hidden={roomy && !open ? true : undefined}
+      inert={roomy && !open ? true : undefined}
+      className={[
+        "flex h-full shrink-0 flex-col overflow-hidden border-r border-border bg-background/80 backdrop-blur-md select-none",
+        roomy
+          ? "fixed inset-y-0 left-0 z-40 w-[min(280px,86vw)] shadow-2xl transition-transform duration-200 ease-out"
+          : "relative w-[260px]",
+        roomy && !open ? "-translate-x-full pointer-events-none" : "",
+      ].join(" ")}
+    >
       {/* Logo Area */}
-      <div className="px-6 py-8">
+      <div className={roomy ? "flex items-start justify-between gap-2 px-4 py-4" : "px-6 py-8"}>
         <button
           onClick={nav.toDashboard}
-          className="group flex items-center gap-3 hover:opacity-80 transition-all duration-300"
+          className="group flex min-w-0 items-center gap-3 hover:opacity-80 transition-all duration-300"
         >
           <InkosLogo className="w-11 h-11 shrink-0 group-hover:scale-105 transition-transform" />
           <div className="flex flex-col">
@@ -299,6 +322,16 @@ export function Sidebar({ nav, activePage, sse, t }: {
             <span className="text-[13px] uppercase tracking-[0.22em] text-muted-foreground font-bold mt-1.5">Studio</span>
           </div>
         </button>
+        {roomy && (
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label={t("shell.closeNav")}
+            className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-secondary/60 hover:text-foreground"
+          >
+            <X size={18} />
+          </button>
+        )}
       </div>
 
       {/* Main Navigation */}
@@ -343,7 +376,7 @@ export function Sidebar({ nav, activePage, sse, t }: {
                       type="button"
                       aria-label={isExpanded ? tr(`折叠 ${book.title}`, `Collapse ${book.title}`) : tr(`展开 ${book.title}`, `Expand ${book.title}`)}
                       onClick={() => toggleBook(book.id)}
-                      className="flex h-8 w-7 shrink-0 items-center justify-center rounded-md text-muted-foreground/60 hover:bg-secondary/30 hover:text-foreground transition-colors"
+                      className={`flex shrink-0 items-center justify-center rounded-md text-muted-foreground/60 hover:bg-secondary/30 hover:text-foreground transition-colors ${roomy ? "h-10 w-10" : "h-8 w-7"}`}
                     >
                       <ChevronRight
                         size={12}
@@ -353,7 +386,7 @@ export function Sidebar({ nav, activePage, sse, t }: {
                     <button
                       type="button"
                       onClick={() => openBook(book.id)}
-                      className={`flex min-w-0 flex-1 items-center gap-1.5 py-1.5 pr-2 rounded-md text-[15px] leading-6 transition-colors ${
+                      className={`flex min-w-0 flex-1 items-center gap-1.5 pr-2 rounded-md text-[15px] leading-6 transition-colors ${hit} ${
                         isActiveBook ? "text-foreground font-medium" : "text-muted-foreground hover:text-foreground hover:bg-secondary/30"
                       }`}
                     >
@@ -376,7 +409,7 @@ export function Sidebar({ nav, activePage, sse, t }: {
                             <button
                               type="button"
                               onClick={() => openSession(book.id, session.sessionId)}
-                              className="flex min-w-0 flex-1 items-center gap-2 pl-9 pr-2 py-1.5 text-left text-[14px] leading-5 transition-colors"
+                              className={`flex min-w-0 flex-1 items-center gap-2 pl-9 pr-2 text-left text-[14px] leading-5 transition-colors ${hit}`}
                             >
                               <span className={`truncate flex-1 ${isActiveSession ? "text-foreground" : "text-muted-foreground group-hover/session:text-foreground"}`}>
                                 {label}
@@ -420,7 +453,7 @@ export function Sidebar({ nav, activePage, sse, t }: {
                       <button
                         type="button"
                         onClick={() => void handleCreateSession(book.id)}
-                        className="w-full flex items-center gap-2 pl-9 pr-2 py-1.5 text-[13px] text-muted-foreground/50 hover:text-foreground transition-colors"
+                        className={`w-full flex items-center gap-2 pl-9 pr-2 text-[13px] text-muted-foreground/50 hover:text-foreground transition-colors ${hit}`}
                       >
                         <Plus size={12} />
                         <span>{tr("新建会话", "New session")}</span>
@@ -451,7 +484,7 @@ export function Sidebar({ nav, activePage, sse, t }: {
                   type="button"
                   data-testid={`film-project-${film.projectId}`}
                   onClick={() => nav.toFilmStudio(film.projectId)}
-                  className="w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-left hover:bg-secondary/30 transition-colors"
+                  className={`w-full flex items-center gap-2 px-3 rounded-lg text-left hover:bg-secondary/30 transition-colors ${hit}`}
                 >
                   <Film size={14} className="shrink-0 text-muted-foreground" />
                   <span className="truncate text-[15px] text-foreground">{film.title}</span>
@@ -497,7 +530,7 @@ export function Sidebar({ nav, activePage, sse, t }: {
                         <button
                           type="button"
                           onClick={() => openProjectChatSession(session.sessionId)}
-                          className="flex min-w-0 flex-1 items-center gap-2 pl-2 pr-2 py-1.5 text-left text-[14px] leading-5 transition-colors"
+                          className={`flex min-w-0 flex-1 items-center gap-2 pl-2 pr-2 text-left text-[14px] leading-5 transition-colors ${hit}`}
                         >
                           <SessionKindIcon
                             kind={session.sessionKind}
@@ -545,7 +578,7 @@ export function Sidebar({ nav, activePage, sse, t }: {
                   <button
                     type="button"
                     onClick={() => handleCreateProjectChatSession()}
-                    className="w-full flex items-center gap-2 pl-2 pr-2 py-1.5 text-[13px] text-muted-foreground/50 hover:text-foreground transition-colors"
+                    className={`w-full flex items-center gap-2 pl-2 pr-2 text-[13px] text-muted-foreground/50 hover:text-foreground transition-colors ${hit}`}
                   >
                     <Plus size={12} />
                     <span>{tr("新建会话", "New session")}</span>
@@ -714,6 +747,7 @@ export function Sidebar({ nav, activePage, sse, t }: {
         onCancel={() => setDeleteTarget(null)}
       />
     </aside>
+    </SidebarRoomy.Provider>
   );
 }
 
@@ -781,11 +815,12 @@ function CreateItem({ icon, label, active, onClick }: {
   active?: boolean;
   onClick: () => void;
 }) {
+  const roomy = useContext(SidebarRoomy);
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`flex min-w-0 items-center gap-2 rounded-lg px-2.5 py-2.5 text-left text-[16px] leading-6 transition-all ${
+      className={`flex min-w-0 items-center gap-2 rounded-lg px-2.5 py-2.5 text-left text-[16px] leading-6 transition-all ${roomy ? "min-h-11" : ""} ${
         active
           ? "border border-border bg-secondary text-foreground font-medium shadow-sm"
           : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground"
@@ -805,10 +840,12 @@ function SidebarItem({ label, icon, active, onClick, badge, badgeColor }: {
   badge?: string;
   badgeColor?: string;
 }) {
+  const roomy = useContext(SidebarRoomy);
   return (
     <button
+      type="button"
       onClick={onClick}
-      className={`w-full group flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-200 ${
+      className={`w-full group flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-200 ${roomy ? "min-h-11" : ""} ${
         active
           ? "bg-secondary text-foreground font-medium shadow-sm border border-border"
           : "text-foreground font-medium hover:text-foreground hover:bg-secondary/50"
