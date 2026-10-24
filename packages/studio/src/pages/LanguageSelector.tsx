@@ -11,7 +11,7 @@ export function LanguageSelector({ onSelect }: { onSelect: (lang: "zh" | "en") =
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col items-center justify-center px-8">
+    <div className="min-h-screen bg-background flex flex-col items-center justify-center px-4 py-10 sm:px-8">
       {/* Logo — cinematic scale */}
       <div className="mb-16 text-center">
         <div className="flex items-baseline justify-center gap-1.5 mb-4">
@@ -22,12 +22,12 @@ export function LanguageSelector({ onSelect }: { onSelect: (lang: "zh" | "en") =
       </div>
 
       {/* Language cards — generous, distinct, immersive */}
-      <div className="flex gap-8 mb-16">
+      <div className="mb-10 flex w-full max-w-3xl flex-col gap-4 md:mb-16 md:flex-row md:gap-8">
         <button
           onClick={() => handleSelect("zh")}
           onMouseEnter={() => setHovering("zh")}
           onMouseLeave={() => setHovering(null)}
-          className={`group w-80 border rounded-lg p-10 text-left transition-all duration-300 ${
+          className={`group w-full border rounded-lg p-6 text-left transition-all duration-300 md:w-80 md:p-10 ${
             selected === "zh"
               ? "border-primary bg-primary/10 scale-[1.02]"
               : hovering === "zh"
@@ -48,7 +48,7 @@ export function LanguageSelector({ onSelect }: { onSelect: (lang: "zh" | "en") =
           onClick={() => handleSelect("en")}
           onMouseEnter={() => setHovering("en")}
           onMouseLeave={() => setHovering(null)}
-          className={`group w-80 border rounded-lg p-10 text-left transition-all duration-300 ${
+          className={`group w-full border rounded-lg p-6 text-left transition-all duration-300 md:w-80 md:p-10 ${
             selected === "en"
               ? "border-primary bg-primary/10 scale-[1.02]"
               : hovering === "en"

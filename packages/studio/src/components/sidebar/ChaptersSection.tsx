@@ -42,7 +42,7 @@ export function ChaptersSection({ bookId, isZh }: ChaptersSectionProps) {
               <li
                 key={`${ch.number}-${ch.title ?? ""}`}
                 onClick={() => useChatStore.getState().openChapterArtifact(ch.number)}
-                className="flex items-center gap-2 py-1 text-[15px] leading-6 text-muted-foreground cursor-pointer hover:text-foreground transition-colors rounded px-1 -mx-1 hover:bg-secondary/50">
+                className="flex min-h-10 items-center gap-2 py-2 text-[15px] leading-6 text-muted-foreground cursor-pointer hover:text-foreground transition-colors rounded px-1 -mx-1 hover:bg-secondary/50">
                 <span className={cn("text-[13px] shrink-0", ind.color)}>{ind.symbol}</span>
                 <span className="truncate flex-1">
                   {String(ch.number).padStart(2, "0")} {ch.title || (isZh ? `第${ch.number}章` : `Chapter ${ch.number}`)}

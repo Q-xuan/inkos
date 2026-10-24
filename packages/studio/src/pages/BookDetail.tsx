@@ -290,9 +290,9 @@ export function BookDetail({
 
       {/* Header Section */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-border/40 pb-8">
-        <div className="space-y-2">
-          <div className="flex items-center gap-3">
-            <h1 className="text-4xl font-serif font-medium">{book.title}</h1>
+        <div className="min-w-0 space-y-2">
+          <div className="flex min-w-0 items-center gap-3">
+            <h1 className="min-w-0 break-words text-3xl font-serif font-medium sm:text-4xl">{book.title}</h1>
             {book.language === "en" && (
               <span className="px-1.5 py-0.5 rounded border border-primary/20 text-primary text-[10px] font-bold">EN</span>
             )}
@@ -457,7 +457,7 @@ export function BookDetail({
       {/* Chapters Table */}
       <div className="paper-sheet rounded-2xl overflow-hidden border border-border/40 shadow-xl shadow-primary/5">
         <div className="overflow-x-auto">
-          <table className="w-full text-sm border-collapse">
+          <table className="w-full min-w-[40rem] text-sm border-collapse">
             <thead>
               <tr className="bg-muted/30 border-b border-border/50">
                 <th className="text-left px-6 py-4 font-bold text-[11px] uppercase tracking-widest text-muted-foreground w-16">#</th>

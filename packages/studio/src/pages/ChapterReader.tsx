@@ -172,7 +172,7 @@ export function ChapterReader({ bookId, chapterNumber, nav, theme, t }: {
       />
 
       {/* Manuscript Sheet */}
-      <div className="paper-sheet rounded-2xl p-8 md:p-16 lg:p-24 shadow-2xl shadow-primary/5 min-h-[80vh] relative overflow-hidden">
+      <div className="paper-sheet rounded-2xl p-5 sm:p-8 md:p-16 lg:p-24 shadow-2xl shadow-primary/5 min-h-[80vh] relative overflow-hidden">
         {/* Physical Paper Details */}
         <div className="absolute top-0 left-8 w-px h-full bg-primary/5 hidden md:block" />
         <div className="absolute top-0 right-8 w-px h-full bg-primary/5 hidden md:block" />

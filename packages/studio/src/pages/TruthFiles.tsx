@@ -90,7 +90,7 @@ export function TruthFiles({ bookId, nav, theme, t }: { bookId: string; nav: Nav
 
       <h1 className="font-serif text-3xl">{t("truth.title")}</h1>
 
-      <div className="grid grid-cols-[240px_1fr] gap-6">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-[220px_minmax(0,1fr)] md:gap-6">
         {/* File list */}
         <div className={`border ${c.cardStatic} rounded-lg overflow-hidden`}>
           {data?.files.map((f) => (
@@ -113,7 +113,7 @@ export function TruthFiles({ bookId, nav, theme, t }: { bookId: string; nav: Nav
         </div>
 
         {/* Content viewer */}
-        <div className={`border ${c.cardStatic} rounded-lg p-5 min-h-[400px] flex flex-col`}>
+        <div className={`border ${c.cardStatic} rounded-lg p-5 min-h-[400px] min-w-0 flex flex-col`}>
           {selected && fileData?.content != null ? (
             <>
               {isRuntimeDiagnostic && (
@@ -165,7 +165,7 @@ export function TruthFiles({ bookId, nav, theme, t }: { bookId: string; nav: Nav
                   className={`${c.input} flex-1 rounded-md p-3 text-sm font-mono leading-relaxed resize-none min-h-[360px]`}
                 />
               ) : (
-                <pre className="text-sm leading-relaxed whitespace-pre-wrap font-mono text-foreground/80">{fileData.content}</pre>
+                <pre className="min-w-0 overflow-x-auto text-sm leading-relaxed whitespace-pre-wrap break-words font-mono text-foreground/80">{fileData.content}</pre>
               )}
             </>
           ) : selected && fileData?.content === null ? (

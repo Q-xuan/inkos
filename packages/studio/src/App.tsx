@@ -31,8 +31,9 @@ import { useTheme } from "./hooks/use-theme";
 import { useI18n } from "./hooks/use-i18n";
 import { setAppLanguage, tr } from "./lib/app-language";
 import { postApi, putApi, useApi } from "./hooks/use-api";
-import { Sun, Moon } from "lucide-react";
-import { House } from "lucide-react";
+import { Sun, Moon, House, Menu, X } from "lucide-react";
+import { useMinWidth } from "./hooks/use-min-width";
+import { SHELL_DOCK_MIN } from "./lib/shell-layout";
 
 export type { HashRoute as Route } from "./hooks/use-hash-route";
 
@@ -63,6 +64,25 @@ export function App() {
   const [ready, setReady] = useState(false);
 
   const isDark = theme === "dark";
+  const dockedNav = useMinWidth(SHELL_DOCK_MIN);
+  const [navOpen, setNavOpen] = useState(false);
+
+  useEffect(() => {
+    setNavOpen(false);
+  }, [route]);
+
+  useEffect(() => {
+    if (dockedNav) setNavOpen(false);
+  }, [dockedNav]);
+
+  useEffect(() => {
+    if (dockedNav || !navOpen) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setNavOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [dockedNav, navOpen]);
 
   // 全局语言同步：app-language 是模块级单例，供用不了 hook 的代码（lib 纯函数、
   // store slice）读取。这里在渲染期同步赋值，让子组件在同一次渲染里调用 tr() 时
@@ -89,33 +109,38 @@ export function App() {
 
   useSessionEvents(sse, route, setRoute);
 
+  const go = (next: HashRoute) => {
+    setNavOpen(false);
+    setRoute(next);
+  };
+
   const nav = {
-    toDashboard: () => setRoute({ page: "dashboard" }),
-    toChat: () => setRoute({ page: "chat" }),
-    toBook: (bookId: string) => setRoute({ page: "book", bookId }),
-    toBookSettings: (bookId: string) => setRoute({ page: "book-settings", bookId }),
-    toBookCreate: () => setRoute({ page: "book-create" }),
-    toWork: (workId: string) => setRoute({ page: "work", workId }),
-    toWorkChat: (workId: string, profileId: string) => setRoute({ page: "work-chat", workId, profileId }),
+    toDashboard: () => go({ page: "dashboard" }),
+    toChat: () => go({ page: "chat" }),
+    toBook: (bookId: string) => go({ page: "book", bookId }),
+    toBookSettings: (bookId: string) => go({ page: "book-settings", bookId }),
+    toBookCreate: () => go({ page: "book-create" }),
+    toWork: (workId: string) => go({ page: "work", workId }),
+    toWorkChat: (workId: string, profileId: string) => go({ page: "work-chat", workId, profileId }),
     toChapter: (bookId: string, chapterNumber: number) =>
-      setRoute({ page: "chapter", bookId, chapterNumber }),
-    toAnalytics: (bookId: string) => setRoute({ page: "analytics", bookId }),
-    toServices: () => setRoute({ page: "services" }),
-    toProjectSettings: () => setRoute({ page: "project-settings" }),
-    toServiceDetail: (id: string) => setRoute({ page: "service-detail", serviceId: id }),
-    toTruth: (bookId: string) => setRoute({ page: "truth", bookId }),
-    toDaemon: () => setRoute({ page: "daemon" }),
-    toLogs: () => setRoute({ page: "logs" }),
-    toStyle: () => setRoute({ page: "style" }),
-    toTranslation: () => setRoute({ page: "translation" }),
-    toImport: (tab?: "chapters" | "canon" | "fanfic" | "spinoff" | "imitation") => setRoute({ page: "import", ...(tab ? { tab } : {}) }),
-    toRadar: () => setRoute({ page: "radar" }),
-    toDoctor: () => setRoute({ page: "doctor" }),
-    toPlay: (projectId: string) => setRoute({ page: "play", projectId }),
-    toFilm: (projectId: string) => setRoute({ page: "film", projectId }),
-    toFlow: (projectId: string) => setRoute({ page: "flow", projectId }),
-    toFilmAuthor: (projectId: string) => setRoute({ page: "film-author", projectId }),
-    toFilmStudio: (projectId: string) => setRoute({ page: "film-studio", projectId }),
+      go({ page: "chapter", bookId, chapterNumber }),
+    toAnalytics: (bookId: string) => go({ page: "analytics", bookId }),
+    toServices: () => go({ page: "services" }),
+    toProjectSettings: () => go({ page: "project-settings" }),
+    toServiceDetail: (id: string) => go({ page: "service-detail", serviceId: id }),
+    toTruth: (bookId: string) => go({ page: "truth", bookId }),
+    toDaemon: () => go({ page: "daemon" }),
+    toLogs: () => go({ page: "logs" }),
+    toStyle: () => go({ page: "style" }),
+    toTranslation: () => go({ page: "translation" }),
+    toImport: (tab?: "chapters" | "canon" | "fanfic" | "spinoff" | "imitation") => go({ page: "import", ...(tab ? { tab } : {}) }),
+    toRadar: () => go({ page: "radar" }),
+    toDoctor: () => go({ page: "doctor" }),
+    toPlay: (projectId: string) => go({ page: "play", projectId }),
+    toFilm: (projectId: string) => go({ page: "film", projectId }),
+    toFlow: (projectId: string) => go({ page: "flow", projectId }),
+    toFilmAuthor: (projectId: string) => go({ page: "film-author", projectId }),
+    toFilmStudio: (projectId: string) => go({ page: "film-studio", projectId }),
   };
 
   const activeBookId = deriveActiveBookId(route);
@@ -174,52 +199,87 @@ export function App() {
     );
   }
 
+  const shellMode = dockedNav ? "dock" : "drawer";
+
   return (
-    <div className="h-screen bg-background text-foreground flex overflow-hidden font-sans">
+    <div className="h-screen min-w-0 bg-background text-foreground flex overflow-hidden font-sans">
+      {shellMode === "drawer" && navOpen && (
+        <button
+          type="button"
+          aria-label={t("shell.closeNav")}
+          className="fixed inset-0 z-30 bg-black/30 backdrop-blur-[2px]"
+          onClick={() => setNavOpen(false)}
+        />
+      )}
+
       {/* Left Sidebar */}
-      <Sidebar nav={nav} activePage={activePage} sse={sse} t={t} />
+      <Sidebar
+        nav={nav}
+        activePage={activePage}
+        sse={sse}
+        t={t}
+        mode={shellMode}
+        open={shellMode === "dock" || navOpen}
+        onClose={() => setNavOpen(false)}
+      />
 
       {/* Center Content */}
       <div className="flex-1 flex flex-col min-w-0 bg-background/30 backdrop-blur-sm">
         {/* Header Strip */}
-        <header className="h-14 shrink-0 flex items-center justify-between px-8 border-b border-border/40">
-          <div className="flex items-center gap-2">
+        <header className="h-14 shrink-0 flex items-center justify-between gap-2 min-w-0 px-3 sm:px-4 lg:px-8 border-b border-border/40">
+          <div className="flex items-center gap-2 min-w-0">
+             {shellMode === "drawer" && (
+               <button
+                 type="button"
+                 aria-label={navOpen ? t("shell.closeNav") : t("shell.openNav")}
+                 aria-expanded={navOpen}
+                 aria-controls="studio-nav"
+                 onClick={() => setNavOpen((open) => !open)}
+                 className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-border/50 bg-card/70 text-foreground hover:bg-secondary/50 transition-colors"
+               >
+                 {navOpen ? <X size={18} /> : <Menu size={18} />}
+               </button>
+             )}
              <button
                onClick={nav.toDashboard}
-               className="inline-flex items-center gap-2 rounded-lg border border-border/50 bg-card/70 px-3.5 py-2 text-[17px] font-semibold text-foreground hover:bg-secondary/50 transition-colors"
+               className="inline-flex min-w-0 items-center gap-2 rounded-lg border border-border/50 bg-card/70 px-2.5 py-2 text-[17px] font-semibold text-foreground hover:bg-secondary/50 transition-colors sm:px-3.5"
              >
-               <House size={18} />
-               <span>{t("bread.home")}</span>
-               <span className="text-muted-foreground/70">/</span>
-               <span className="font-serif">InkOS Studio</span>
+               <House size={18} className="shrink-0" />
+               <span className="truncate">{t("bread.home")}</span>
+               <span className="hidden text-muted-foreground/70 sm:inline">/</span>
+               <span className="hidden truncate font-serif sm:inline">InkOS Studio</span>
              </button>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex shrink-0 items-center gap-1.5 sm:gap-3">
             <div className="flex gap-0.5 bg-muted/50 rounded-lg p-0.5">
               <button
+                type="button"
                 onClick={async () => {
                   await putApi("/project", { language: "zh" });
                   refetchProject();
                 }}
-                className={`px-2.5 py-1 text-[16px] font-medium rounded-md ${currentLang === "zh" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
+                className={`min-h-10 min-w-10 px-2.5 text-[16px] font-medium rounded-md lg:min-h-0 lg:min-w-0 lg:py-1 ${currentLang === "zh" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
               >
                 中
               </button>
               <button
+                type="button"
                 onClick={async () => {
                   await putApi("/project", { language: "en" });
                   refetchProject();
                 }}
-                className={`px-2.5 py-1 text-[16px] font-medium rounded-md ${currentLang === "en" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
+                className={`min-h-10 min-w-10 px-2.5 text-[16px] font-medium rounded-md lg:min-h-0 lg:min-w-0 lg:py-1 ${currentLang === "en" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
               >
                 EN
               </button>
             </div>
 
             <button
+              type="button"
+              aria-label={isDark ? "light" : "dark"}
               onClick={() => setTheme(isDark ? "light" : "dark")}
-              className="text-muted-foreground hover:text-foreground transition-colors"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground transition-colors lg:h-auto lg:w-auto"
             >
               {isDark ? <Sun size={18} /> : <Moon size={18} />}
             </button>
@@ -227,14 +287,14 @@ export function App() {
         </header>
 
         {/* Main Content Area */}
-        <main className="flex-1 relative overflow-y-auto scroll-smooth">
+        <main className="flex-1 relative min-w-0 overflow-x-hidden overflow-y-auto scroll-smooth">
           {route.page === "dashboard" && (
-            <div className="max-w-4xl mx-auto px-6 py-12 md:px-12 lg:py-16 fade-in">
+            <div className="studio-page max-w-4xl fade-in">
               <Dashboard nav={nav} sse={sse} theme={theme} t={t} />
             </div>
           )}
           {route.page === "work" && (
-            <div className="mx-auto w-full max-w-5xl px-6 py-12 md:px-12 lg:py-16 fade-in">
+            <div className="studio-page max-w-5xl fade-in">
               <WorkInspector workId={route.workId} onBack={nav.toDashboard} onChat={nav.toWorkChat} />
             </div>
           )}
@@ -288,82 +348,82 @@ export function App() {
             </div>
           )}
           {route.page === "book-settings" && (
-            <div className="max-w-4xl mx-auto px-6 py-12 md:px-12 lg:py-16 fade-in">
+            <div className="studio-page max-w-4xl fade-in">
               <BookDetail bookId={route.bookId} nav={nav} theme={theme} t={t} sse={sse} />
             </div>
           )}
           {route.page === "chapter" && (
-            <div className="mx-auto w-full max-w-[1400px] px-4 py-12 sm:px-6 lg:px-10 lg:py-16 2xl:px-12 fade-in">
+            <div className="mx-auto w-full min-w-0 max-w-[1400px] px-4 py-6 sm:px-6 sm:py-10 lg:px-8 lg:py-12 xl:px-10 xl:py-16 2xl:px-12 fade-in">
               <ChapterReader bookId={route.bookId} chapterNumber={route.chapterNumber} nav={nav} theme={theme} t={t} />
             </div>
           )}
           {route.page === "analytics" && (
-            <div className="max-w-4xl mx-auto px-6 py-12 md:px-12 lg:py-16 fade-in">
+            <div className="studio-page max-w-4xl fade-in">
               <Analytics bookId={route.bookId} nav={nav} theme={theme} t={t} />
             </div>
           )}
           {route.page === "services" && (
-            <div className="max-w-4xl mx-auto px-6 py-12 md:px-12 lg:py-16 fade-in">
+            <div className="studio-page max-w-4xl fade-in">
               <ServiceListPage nav={nav} />
             </div>
           )}
           {route.page === "project-settings" && (
-            <div className="max-w-4xl mx-auto px-6 py-12 md:px-12 lg:py-16 fade-in">
+            <div className="studio-page max-w-4xl fade-in">
               <ProjectSettings nav={nav} theme={theme} t={t} />
             </div>
           )}
           {route.page === "service-detail" && (
-            <div className="max-w-4xl mx-auto px-6 py-12 md:px-12 lg:py-16 fade-in">
+            <div className="studio-page max-w-4xl fade-in">
               <ServiceDetailPage serviceId={route.serviceId} nav={nav} />
             </div>
           )}
           {route.page === "truth" && (
-            <div className="max-w-4xl mx-auto px-6 py-12 md:px-12 lg:py-16 fade-in">
+            <div className="studio-page max-w-4xl fade-in">
               <TruthFiles bookId={route.bookId} nav={nav} theme={theme} t={t} />
             </div>
           )}
           {route.page === "daemon" && (
-            <div className="max-w-4xl mx-auto px-6 py-12 md:px-12 lg:py-16 fade-in">
+            <div className="studio-page max-w-4xl fade-in">
               <DaemonControl nav={nav} theme={theme} t={t} sse={sse} />
             </div>
           )}
           {route.page === "logs" && (
-            <div className="max-w-4xl mx-auto px-6 py-12 md:px-12 lg:py-16 fade-in">
+            <div className="studio-page max-w-4xl fade-in">
               <LogViewer nav={nav} theme={theme} t={t} />
             </div>
           )}
           {route.page === "style" && (
-            <div className="max-w-4xl mx-auto px-6 py-12 md:px-12 lg:py-16 fade-in">
+            <div className="studio-page max-w-4xl fade-in">
               <StyleManager nav={nav} theme={theme} t={t} />
             </div>
           )}
           {route.page === "translation" && (
-            <div className="max-w-6xl mx-auto px-6 py-12 md:px-12 lg:py-16 fade-in">
+            <div className="studio-page max-w-6xl fade-in">
               <TranslationManager nav={nav} theme={theme} t={t} />
             </div>
           )}
           {route.page === "import" && (
-            <div className="max-w-4xl mx-auto px-6 py-12 md:px-12 lg:py-16 fade-in">
+            <div className="studio-page max-w-4xl fade-in">
               <ImportManager nav={nav} theme={theme} t={t} initialTab={route.tab} />
             </div>
           )}
           {route.page === "radar" && (
-            <div className="max-w-4xl mx-auto px-6 py-12 md:px-12 lg:py-16 fade-in">
+            <div className="studio-page max-w-4xl fade-in">
               <RadarView nav={nav} theme={theme} t={t} />
             </div>
           )}
           {route.page === "doctor" && (
-            <div className="max-w-4xl mx-auto px-6 py-12 md:px-12 lg:py-16 fade-in">
+            <div className="studio-page max-w-4xl fade-in">
               <DoctorView nav={nav} theme={theme} t={t} />
             </div>
           )}
           {route.page === "play" && (
-            <div className="max-w-4xl mx-auto px-6 py-12 md:px-12 lg:py-16 fade-in">
+            <div className="studio-page max-w-4xl fade-in">
               <StoryPlayer projectId={route.projectId} nav={nav} theme={theme} t={t} />
             </div>
           )}
           {route.page === "film" && (
-            <div className="max-w-4xl mx-auto px-6 py-12 md:px-12 lg:py-16 fade-in">
+            <div className="studio-page max-w-4xl fade-in">
               <StoryGraphTree projectId={route.projectId} nav={nav} theme={theme} t={t} />
             </div>
           )}
