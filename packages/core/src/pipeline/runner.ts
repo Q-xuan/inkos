@@ -208,6 +208,10 @@ export class PipelineRunner {
     this.state = new StateManager(config.projectRoot);
   }
 
+  get projectRoot(): string {
+    return this.config.projectRoot;
+  }
+
   async runWithAbortSignal<T>(
     signal: AbortSignal | undefined,
     task: () => Promise<T>,
