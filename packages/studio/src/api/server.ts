@@ -1211,6 +1211,7 @@ async function executeConfirmedProductionAction(args: {
       throw new ApiError(400, "BOOK_ID_REQUIRED", pick(lang, "写下一章需要先打开一本书。", "Writing the next chapter requires an active book."));
     }
     const chapterCount = actionPayload?.writeNext?.chapterCount ?? 1;
+    const startChapterNumber = await new StateManager(args.root).getNextChapterNumber(args.bookId);
     tool = createWriteChaptersTool(args.pipeline, args.bookId, {
       language: lang,
       workerSkills: (worker) => (
@@ -1222,6 +1223,7 @@ async function executeConfirmedProductionAction(args: {
     params = {
       bookId: args.bookId,
       instruction: args.instruction,
+      startChapterNumber,
       chapterCount,
     };
   } else if (args.requestedIntent === "generate_cover") {
@@ -3332,9 +3334,10 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
     broadcast("write:start", { bookId: id });
 
     const pipeline = new PipelineRunner(await buildPipelineConfig({ bookIdForSettings: id }));
-    const [writingSkills, reviewSkills] = await Promise.all([
+    const [writingSkills, reviewSkills, startChapterNumber] = await Promise.all([
       resolveStudioProfileSkills(root, "longform-novel"),
       resolveStudioProfileSkills(root, "longform-novel", { includeRecommended: true }),
+      state.getNextChapterNumber(id),
     ]);
     const tool = createWriteChaptersTool(pipeline, id, {
       workerSkills: (worker) => worker === "auditor" || worker === "reviser" ? reviewSkills : writingSkills,
@@ -3346,6 +3349,7 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
       parameters: {
         instruction: "Write the next chapter for the active Work.",
         bookId: id,
+        startChapterNumber,
         chapterCount: 1,
         ...(body.wordCount ? { chapterWordCount: body.wordCount } : {}),
       },
